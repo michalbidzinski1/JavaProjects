@@ -1,8 +1,11 @@
 package pl.michalbidzinski;
 
 import pl.michalbidzinski.observer.OfferObserver;
+import pl.michalbidzinski.visitor.Visitor;
+
 import java.util.*;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Offer {
     private final Product product;
@@ -12,20 +15,31 @@ public class Offer {
     private List<OfferObserver> observers;
     boolean bought;
 
-    public Offer(Product product,double price, double productionCost) {
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+
+
+    public Offer(Product product, double price, double productionCost) {
         this.product = product;
         this.price = price;
         this.productionCost = productionCost;
-        this.observers = new ArrayList<>();
+        this.observers = new CopyOnWriteArrayList<>();
+    }
+    public  void increasePrice(double val) {
+        this.setPrice(price +  val);
+        for (OfferObserver observer : observers) {
+            observer.update(this);
+        }
+    }
+    public  void increasePriceByPercent(double val) {
+        this.setPrice(price +  price * val);
+        for (OfferObserver observer : observers) {
+            observer.update(this);
+        }
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
-    public Seller getSeller() {
-        return seller;
-    }
 
     public void setSeller(Seller seller) {
         System.out.println(seller);
@@ -40,25 +54,17 @@ public class Offer {
         this.price = price;
     }
 
-    public double getProductionCost() {
-        return productionCost;
-    }
 
-    public List<OfferObserver> getFollowers() {
-        return observers;
-    }
 
-    public void setFollowers(List<OfferObserver> followers) {
-        this.observers = observers;
-    }
+
 
     public boolean isBought() {
         return bought;
     }
-
-    public void setBought(boolean bought) {
-        this.bought = bought;
+    public void addObserver(OfferObserver observer) {
+        observers.add(observer);
     }
+
     public void buy(Buyer buyer) {
         buyer.addProductToBought(this.product);
         buyer.spendMoney(price);

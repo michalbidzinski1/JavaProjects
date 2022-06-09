@@ -4,8 +4,9 @@ import org.junit.*;
 import pl.michalbidzinski.*;
 
 import java.util.Arrays;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BankTest {
     @Test
     public void updateInflationAfterTransaction() {
-        // arrange
         Bank bank = Bank.getInstance();
         Buyer buyer = new Buyer("Test");
         Seller seller = new Seller("Test");
@@ -22,15 +22,9 @@ public class BankTest {
         seller.addOffer(offer);
         seller.addOffer(offer2);
         double inflation = bank.getInflation();
-
-        // act
         offer.buy(buyer);
         offer2.buy(buyer);
-//
-        // assert
-//        assertEquals(bank.getInflation(), );
-//        assertTrue(bank.getInflation())
-//                .isGreaterThan(inflation);
+        assertNotEquals(bank.getInflation(), inflation);
     }
 
 

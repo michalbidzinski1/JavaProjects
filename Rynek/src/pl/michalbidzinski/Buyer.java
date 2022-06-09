@@ -2,6 +2,8 @@ package pl.michalbidzinski;
 
 import pl.michalbidzinski.observer.InflationObserver;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class Buyer implements InflationObserver {
     private String name;
     private List<Interest> interests;
@@ -19,69 +21,53 @@ public class Buyer implements InflationObserver {
         this.lastKnownInflation = bank.getInflation();
         this.money = 10000;
         this.bank.addObserver(this);
-        this.boughtProducts = new ArrayList<>();
+        this.boughtProducts = new CopyOnWriteArrayList<>();
     }
     public Buyer(String name) {
         this(name, 0.75);
+    }
+    public void followOffer(Offer offer) {
+        Interest interest = new Interest(offer, this);
+        interests.add(interest);
+        offer.addObserver(interest);
+    }
+    public void canBuyOffer(Offer offer) {
+        if (offer.getPrice() <= money) {
+            offer.buy(this);
+        }
+    }
+    public void unfollowOffer(Offer offer) {
+        interests.removeIf(o -> offer.equals(o.getOffer()));
+    }
+
+
+    public List<Interest> getInterests() {
+        return interests;
     }
 
     public void addProductToBought(Product product) {
         boughtProducts.add(product);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Bank getBank() {
-        return bank;
-    }
-
-    public void setBank(Bank bank) {
-        this.bank = bank;
-    }
 
     public double getRule() {
         return rule;
     }
 
-    public void setRule(double rule) {
-        this.rule = rule;
-    }
-
-    public double getLastKnownInflation() {
-        return lastKnownInflation;
-    }
-
-    public void setLastKnownInflation(double lastKnownInflation) {
-        this.lastKnownInflation = lastKnownInflation;
-    }
-
-    public double getMoney() {
-        return money;
-    }
-
-    public void setMoney(double money) {
-        this.money = money;
-    }
 
     public List<Product> getBoughtProducts() {
         return boughtProducts;
     }
 
-    public void setBoughtProducts(List<Product> boughtProducts) {
-        this.boughtProducts = boughtProducts;
-    }
+
     public void spendMoney(double amount) {
         money -= amount;
     }
 
     @Override
     public void update(double inflation) {
-
+        double inflationDiff = inflation - lastKnownInflation;
+        lastKnownInflation = inflation;
+        interests.forEach(i -> i.updateInflation(inflationDiff));
     }
 }

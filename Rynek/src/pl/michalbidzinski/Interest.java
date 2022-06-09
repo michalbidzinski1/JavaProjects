@@ -1,6 +1,8 @@
 package pl.michalbidzinski;
 
-public class Interest {
+import pl.michalbidzinski.observer.OfferObserver;
+
+public class Interest implements OfferObserver {
     private Offer offer;
     private Buyer buyer;
 
@@ -8,11 +10,11 @@ public class Interest {
 
     private double lastPrice;
 
-    public Interest(Offer offer, Buyer buyer, double interest, double lastPrice) {
+    public Interest(Offer offer, Buyer buyer) {
         this.offer = offer;
         this.buyer = buyer;
-        this.interest = interest;
-        this.lastPrice = lastPrice;
+        interest = Math.max(Math.random(), 0.5);
+        lastPrice = offer.getPrice();
     }
 
     public Offer getOffer() {
@@ -23,27 +25,36 @@ public class Interest {
         this.offer = offer;
     }
 
-    public Buyer getBuyer() {
-        return buyer;
-    }
 
-    public void setBuyer(Buyer buyer) {
-        this.buyer = buyer;
-    }
 
     public double getInterest() {
         return interest;
     }
 
     public void setInterest(double interest) {
-        this.interest = interest;
+        this.interest = Math.max(0, interest);
+    }
+    public void increaseInterest(double increase) {
+        setInterest(interest - increase);
     }
 
-    public double getLastPrice() {
-        return lastPrice;
+    public void updateInflation(double inflationDiff) {
+        if (Math.abs(inflationDiff) > 0.02) {
+            increaseInterest(inflationDiff * interest);
+        }
     }
-
-    public void setLastPrice(double lastPrice) {
-        this.lastPrice = lastPrice;
+    @Override
+    public void update(Offer offer) {
+        if (offer.isBought()) {
+            buyer.unfollowOffer(offer);
+        }
+        double increase = (offer.getPrice() - lastPrice) / lastPrice;
+        lastPrice = offer.getPrice();
+        if(Math.abs(increase) > 0.02) {
+            increaseInterest(increase);
+            if (interest >= buyer.getRule()) {
+                buyer.canBuyOffer(offer);
+            }
+        }
     }
 }
